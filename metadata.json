@@ -1,0 +1,7 @@
+{
+  "name": "GarmentQC AI Pro",
+  "description": "Professional garment quality control and measurement system with AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
