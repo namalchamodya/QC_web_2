@@ -62,7 +62,7 @@ export const ReferenceView: React.FC<ReferenceViewProps> = ({ ppcm, timeStr }) =
          fd.append('measurements', JSON.stringify(result.data));
       } else {
          const measurements = Object.entries(manualValues).map(([k, v]) => ({
-             name: k, value: parseFloat(v) || 0, unit: 'cm'
+             name: k, value: parseFloat(v as string) || 0, unit: 'cm'
          }));
          fd.append('measurements', JSON.stringify(measurements));
          fd.append('file', new Blob([''], {type: 'text/plain'})); 
@@ -92,11 +92,11 @@ export const ReferenceView: React.FC<ReferenceViewProps> = ({ ppcm, timeStr }) =
 
           <div className="flex gap-4 items-center bg-cyber-dark p-4 rounded-xl border border-cyber-gray shrink-0">
               <label className="text-gray-400">Garment Type:</label>
-              <select value={type} onChange={e => { setType(e.target.value); setManualValues({}); }} className="bg-black border border-gray-600 text-white rounded px-3 py-2">
+              <select value={type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setType(e.target.value); setManualValues({}); }} className="bg-black border border-gray-600 text-white rounded px-3 py-2">
                  {GARMENT_TYPES.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
               </select>
               <label className="text-gray-400 ml-4">Size Label:</label>
-              <input type="text" value={size} onChange={e => setSize(e.target.value)} placeholder="e.g. M, 32, 42" className="bg-black border border-gray-600 text-white rounded px-3 py-2" />
+              <input type="text" value={size} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSize(e.target.value)} placeholder="e.g. M, 32, 42" className="bg-black border border-gray-600 text-white rounded px-3 py-2" />
           </div>
 
           {mode === 'auto' ? (
@@ -125,10 +125,10 @@ export const ReferenceView: React.FC<ReferenceViewProps> = ({ ppcm, timeStr }) =
                  <h3 className="text-lg font-bold text-white mb-4">Enter Standard Measurements (cm)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                      {garmentConfig && garmentConfig[type] ? (
-                         garmentConfig[type].measurements.map(measureName => (
+                         garmentConfig[type].measurements.map((measureName: string) => (
                              <div key={measureName}>
                                  <label className="block text-gray-400 text-xs uppercase mb-1">{measureName}</label>
-                                 <input type="number" step="0.1" value={manualValues[measureName] || ''} onChange={e => setManualValues(prev => ({...prev, [measureName]: e.target.value}))} className="w-full bg-black border border-gray-700 text-white rounded px-3 py-2 focus:border-cyber-blue outline-none" />
+                                 <input type="number" step="0.1" value={manualValues[measureName] || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualValues(prev => ({...prev, [measureName]: e.target.value}))} className="w-full bg-black border border-gray-700 text-white rounded px-3 py-2 focus:border-cyber-blue outline-none" />
                              </div>
                          ))
                      ) : <p className="text-gray-500">Loading configuration...</p>}
