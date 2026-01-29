@@ -18,11 +18,15 @@ export interface Measurement {
 }
 
 export interface ProcessResult {
-  measure_image: string; // Base64
-  detect_image: string; // Base64
-  edge_image: string; // Base64
+  id?: string; 
+  garment_id?: string;
+  garment_type?: string; 
+  measure_image: string; 
+  detect_image: string; 
+  edge_image: string; 
   detected_size: string;
   confidence: number;
+  pixels_per_cm?: number;
   qc_status: 'PASS' | 'FAIL' | 'UNKNOWN';
   qc_failures: string[];
   data: Measurement[];

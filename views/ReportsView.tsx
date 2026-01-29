@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE } from '../constants';
 import { Report } from '../types';
 import { StatusHeader } from '../components/StatusHeader';
+import { getQCReports } from '../services/qcService';
 
 interface ReportsViewProps {
   timeStr: string;
@@ -11,9 +12,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ timeStr }) => {
   const [reports, setReports] = useState<Report[]>([]);
 
   useEffect(() => {
-      fetch(`${API_BASE}/api/reports`)
-        .then(r => r.json())
-        .then(data => setReports(data))
+      getQCReports()
+        .then(data => setReports(data as Report[]))
         .catch(e => console.error(e));
   }, []);
 
@@ -55,14 +55,18 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ timeStr }) => {
                 <tbody className="divide-y divide-gray-800">
                     {reports.map((r, i) => (
                         <tr key={i} className="group hover:bg-cyber-blue/5 transition-colors cursor-default">
-                            <td className="p-6 font-mono text-sm text-gray-300 group-hover:text-white">{new Date(r.timestamp).toLocaleString()}</td>
-                            <td className="p-6 capitalize">
-                                <span className="bg-gray-800 px-3 py-1 rounded-full text-xs text-gray-300 border border-gray-700">{r.garment_type.replace(/_/g, ' ')}</span>
+                            <td className="p-6 font-mono text-sm text-gray-300 group-hover:text-white">
+                                {r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A'}
                             </td>
-                            <td className="p-6 font-bold text-white text-lg">{r.detected_size}</td>
+                            <td className="p-6 capitalize">
+                                <span className="bg-gray-800 px-3 py-1 rounded-full text-xs text-gray-300 border border-gray-700">
+                                    {(r.garment_type || 'Unknown').replace(/_/g, ' ')}
+                                </span>
+                            </td>
+                            <td className="p-6 font-bold text-white text-lg">{r.detected_size || '-'}</td>
                             <td className="p-6 text-right">
                                 <span className={`px-4 py-2 rounded-lg text-xs font-bold border ${r.qc_status === 'PASS' ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-red-500/10 border-red-500 text-red-400'}`}>
-                                    {r.qc_status}
+                                    {r.qc_status || 'UNKNOWN'}
                                 </span>
                             </td>
                         </tr>
