@@ -73,6 +73,7 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
     } catch(e: any) { setStatusText("Error: " + e.message); }
   };
 
+  
   const handleSaveReport = async () => {
     if (!lastResult || !lastResult.measure_image) return;
     try {
