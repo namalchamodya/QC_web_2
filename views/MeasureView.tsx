@@ -65,6 +65,7 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
     try {
         const res = await fetch(`${API_BASE}/process`, { method: 'POST', body: fd });
         const data = await res.json();
+        console.log("Process Result:", data);
         if(data.error) throw new Error(data.error);
         setLastResult(data);
         setStatusText("Capture Complete");
