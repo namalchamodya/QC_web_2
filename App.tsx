@@ -15,6 +15,7 @@ import { ReferenceView } from './views/ReferenceView';
 import { SettingsView } from './views/SettingsView';
 
 export default function App() {
+  // Global State
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.MEASURE);
   const [ppcm, setPpcm] = useState<number>(37.8);
   const [garmentType, setGarmentType] = useState<string>('trousers');
@@ -22,15 +23,19 @@ export default function App() {
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('');
 
+  // Initialization
   useEffect(() => {
+    // Clock
     const timer = setInterval(() => {
       const now = new Date();
       setDateStr(now.toLocaleDateString());
       setTimeStr(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }, 1000);
 
+    // Initial Config Load
     const initApi = async () => {
       try {
+        // Reset Camera Rotation to 0 on app load/refresh
         const fd = new FormData();
         fd.append('angle', '0'); 
         await fetch(`${API_BASE}/api/rotate-camera`, { method: 'POST', body: fd });
@@ -50,9 +55,8 @@ export default function App() {
   }, []);
 
   // --- RENDER ---
-  // FIX: Use w-full h-full to fit the parent window exactly without overflow
   return (
-    <div className="w-full h-full bg-cyber-black text-cyber-text flex overflow-hidden font-sans">
+    <div className="w-screen h-screen bg-cyber-black text-cyber-text flex overflow-hidden font-sans">
         <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
         
         <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -97,5 +101,4 @@ export default function App() {
         </div>
     </div>
   );
-  
 }
