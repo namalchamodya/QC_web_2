@@ -3,6 +3,7 @@ import { API_BASE, GARMENT_TYPES } from '../constants';
 import { ProcessResult } from '../types';
 import { Icons } from '../components/Icons';
 import { StatusHeader } from '../components/StatusHeader';
+import { saveQCReportToDB } from '../services/qcService';
 
 interface MeasureViewProps {
   ppcm: number;
@@ -69,27 +70,21 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
         setLastResult(data);
         setStatusText("Capture Complete");
         if (data.qc_status === 'FAIL') setShowQCModal(true);
+        handleSaveReport(data);
     } catch(e: any) { setStatusText("Error: " + e.message); }
   };
 
-  const handleSaveReport = async () => {
-    if (!lastResult || !lastResult.measure_image) return;
+  const handleSaveReport = async (result: ProcessResult) => {
+    if (!result) return;
     try {
-        const block = lastResult.measure_image.split(";");
-        const contentType = block[0].split(":")[1];
-        const realData = window.atob(block[1].split(",")[1]);
-        let array = [];
-        for (let i = 0; i < realData.length; i++) array.push(realData.charCodeAt(i));
-        const blob = new Blob([new Uint8Array(array)], {type: contentType});
-        const fd = new FormData();
-        fd.append('file', blob);
-        fd.append('pixels_per_cm', ppcm.toString());
-        fd.append('manual_garment_type', garmentType);
-        fd.append('save_report', 'true');
-        const res = await fetch(`${API_BASE}/process`, { method: 'POST', body: fd });
-        const d = await res.json();
-        alert(`Report Saved Successfully!\nID: ${d.report_id}`);
-    } catch(e: any) { alert("Error saving report: " + e.message); } 
+        setStatusText("Saving to Database...");
+        const saved = await saveQCReportToDB(result, garmentType); // You can pass factoryId as 3rd arg if available
+        setStatusText(`Saved: ${saved.id.slice(0, 8)}...`);
+        alert(`Report Saved Successfully!\nID: ${saved.id}`);
+    } catch(e: any) { 
+        setStatusText("Save Error: " + e.message);
+        console.error(e);
+    } 
   };
 
   return (
@@ -150,7 +145,7 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
                   </div>
                 ))}
               </div>
-              <button onClick={handleSaveReport} className="mt-auto bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-lg text-xs uppercase tracking-widest border border-gray-600 transition-colors">Save QC Report</button>
+
             </div>
           ) : (
              <div className="text-gray-600 font-light flex flex-col gap-2">
