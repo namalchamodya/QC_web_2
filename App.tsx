@@ -17,7 +17,7 @@ import { SettingsView } from './views/SettingsView';
 export default function App() {
   // Global State
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.MEASURE);
-  const [ppcm, setPpcm] = useState<number>(37.8);
+  const [ppcm, setPpcm] = useState<number>(8.8);
   const [garmentType, setGarmentType] = useState<string>('trousers');
   const [statusText, setStatusText] = useState<string>('System Ready');
   const [dateStr, setDateStr] = useState('');
