@@ -125,17 +125,19 @@ export const getQCReports = async () => {
   }
 };
 
-export const uploadGarmentStandards = async (garmentType: string, standards: any[]) => {
+
+export const uploadGarmentStandards = async (garmentType: string, style: string, standards: any) => {
   try {
     const { data, error } = await supabase
       .from('garment_standards')
       .upsert(
         { 
+            style: style,
             garment_type: garmentType, 
             standards: standards,
             updated_at: new Date().toISOString()
         }, 
-        { onConflict: 'garment_type' }
+        { onConflict: 'style' }
       )
       .select();
 
@@ -145,4 +147,19 @@ export const uploadGarmentStandards = async (garmentType: string, standards: any
     console.error("Error uploading standards:", error);
     throw error;
   }
+};
+
+export const getGarmentStyles = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('garment_standards')
+            .select('style, garment_type, standards')
+            .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        console.error("Error fetching styles:", error);
+        return [];
+    }
 };
