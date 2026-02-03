@@ -124,3 +124,25 @@ export const getQCReports = async () => {
     return [];
   }
 };
+
+export const uploadGarmentStandards = async (garmentType: string, standards: any[]) => {
+  try {
+    const { data, error } = await supabase
+      .from('garment_standards')
+      .upsert(
+        { 
+            garment_type: garmentType, 
+            standards: standards,
+            updated_at: new Date().toISOString()
+        }, 
+        { onConflict: 'garment_type' }
+      )
+      .select();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error uploading standards:", error);
+    throw error;
+  }
+};
