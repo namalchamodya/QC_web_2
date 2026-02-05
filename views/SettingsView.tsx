@@ -18,6 +18,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
     const [previewData, setPreviewData] = useState<string[][]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
+    const [styleCode, setStyleCode] = useState('');
+
     useEffect(() => {
         fetch(`${API_BASE}/api/config`)
             .then(r => r.json())
@@ -29,6 +31,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
 
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedType(e.target.value);
+    };
+
+    const handleStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setStyleCode(e.target.value);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +70,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
 
     const handleUploadToDB = async () => {
         if (!file) return;
+        if (!styleCode.trim()) {
+            alert("Please enter a Style Code.");
+            return;
+        }
         if (previewData.length === 0 || previewHeaders.length === 0) {
             alert("No valid data to upload. Please ensure rows are checked (TRUE in first column).");
             return;
@@ -71,33 +81,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
 
         setIsUploading(true);
         try {
-            const fileNameNoExt = file.name.replace(/\.[^/.]+$/, "");
-            const standardId = `${selectedType}-${fileNameNoExt}`;
-
-            const sizeLabels = previewHeaders.slice(5); 
+            const sizeIndices = previewHeaders.map((h, i) => i >= 5 ? i : -1).filter(i => i !== -1);
             
-            const standards = previewData.map(row => {
-                const sizes: Record<string, string> = {};
-                sizeLabels.forEach((label, idx) => {
-                    sizes[label] = row[5 + idx] || '';
+            const standardsBySize: Record<string, any[]> = {};
+
+            sizeIndices.forEach(colIdx => {
+                const sizeLabel = previewHeaders[colIdx];
+                const measurements: any[] = [];
+
+                
+                previewData.forEach(row => {
+                     const checkVal = row[0] ? row[0].toString().trim().toUpperCase() : '';
+                     if (checkVal === 'TRUE' || checkVal === '1') {
+                         measurements.push({
+                             pom_code: row[1],
+                             description: row[2],
+                             tol_minus: row[3],
+                             tol_plus: row[4],
+                             value: row[colIdx] || ''
+                         });
+                     }
                 });
 
-                return {
-                    pom_code: row[1],
-                    description: row[2],
-                    tol_minus: row[3],
-                    tol_plus: row[4],
-                    sizes: sizes
-                };
+                if (measurements.length > 0) {
+                    standardsBySize[sizeLabel] = measurements;
+                }
             });
 
-            await uploadGarmentStandards(standardId, standards);
-            alert(`Standards uploaded successfully as '${standardId}'!`);
+            await uploadGarmentStandards(selectedType, styleCode.trim(), standardsBySize); 
+
+            alert(`Standards uploaded successfully for Style: '${styleCode}'!`);
             
-        
             setFile(null);
             setPreviewHeaders([]);
             setPreviewData([]);
+            setStyleCode('');
             const fileInput = document.getElementById('csvInput') as HTMLInputElement;
             if(fileInput) fileInput.value = '';
 
@@ -123,8 +141,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
                     <div className="bg-cyber-dark border border-cyber-gray rounded-xl p-8 shadow-2xl">
                         <h3 className="text-xl font-bold text-white mb-2">Import Size Standards (CSV)</h3>
                         <p className="text-gray-400 mb-6 text-sm">
-                            Upload a CSV file. Only checked rows (TRUE/1) will be imported. 
-                            Calculations will use the composite ID: <code>[Type]-[Filename]</code>.
+                            Upload a CSV file. Only checked rows (TRUE/1) will be imported. <br/>
+                            You MUST provide a unique <strong>Style Code</strong> for this standard.
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -139,6 +157,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
                                         <option key={g.id} value={g.id}>{g.label}</option>
                                     ))}
                                 </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-gray-500 text-xs uppercase tracking-wider mb-2">Style Code (Unique)</label>
+                                <input 
+                                    type="text"
+                                    value={styleCode}
+                                    onChange={handleStyleChange}
+                                    placeholder="e.g. ST-2024-001"
+                                    className="w-full bg-black border border-cyber-gray text-white rounded-lg p-3 focus:border-cyber-blue outline-none transition-colors"
+                                />
                             </div>
                         </div>
 
