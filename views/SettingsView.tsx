@@ -4,6 +4,13 @@ import { API_BASE, GARMENT_TYPES } from '../constants';
 import { StatusHeader } from '../components/StatusHeader';
 import { GarmentConfig } from '../types';
 import { uploadGarmentStandards } from '../services/qcService';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 interface SettingsViewProps {
   timeStr: string;
@@ -12,6 +19,7 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
     const [garmentConfig, setGarmentConfig] = useState<GarmentConfig | null>(null);
     const [selectedType, setSelectedType] = useState('trousers');
+    const [unit, setUnit] = useState('cm');
     // const [templateText, setTemplateText] = useState('Loading...');
     const [file, setFile] = useState<File | null>(null);
     const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
@@ -28,10 +36,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
             })
             .catch(err => console.error('Error loading config', err));
     }, []);
-
-    const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedType(e.target.value);
-    };
 
     const handleStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setStyleCode(e.target.value);
@@ -108,7 +112,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
                 }
             });
 
-            await uploadGarmentStandards(selectedType, styleCode.trim(), standardsBySize); 
+            await uploadGarmentStandards(selectedType, styleCode.trim(), standardsBySize, unit); 
 
             alert(`Standards uploaded successfully for Style: '${styleCode}'!`);
             
@@ -145,18 +149,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
                             You MUST provide a unique <strong>Style Code</strong> for this standard.
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                             <div>
                                 <label className="block text-gray-500 text-xs uppercase tracking-wider mb-2">Select Garment Type</label>
-                                <select 
-                                    value={selectedType} 
-                                    onChange={handleTypeChange}
-                                    className="w-full bg-black border border-cyber-gray text-white rounded-lg p-3 focus:border-cyber-blue outline-none transition-colors"
-                                >
-                                    {GARMENT_TYPES.map(g => (
-                                        <option key={g.id} value={g.id}>{g.label}</option>
-                                    ))}
-                                </select>
+                                <Select value={selectedType} onValueChange={setSelectedType}>
+                                    <SelectTrigger className="w-full bg-black border border-cyber-gray text-white rounded-lg h-[46px] focus:ring-cyber-blue focus:ring-1 focus:ring-offset-0">
+                                        <SelectValue placeholder="Select Type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-black border border-cyber-gray text-white">
+                                        {GARMENT_TYPES.map((g) => (
+                                            <SelectItem 
+                                                key={g.id} 
+                                                value={g.id}
+                                                className="focus:bg-cyber-blue focus:text-white cursor-pointer"
+                                            >
+                                                {g.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="block text-gray-500 text-xs uppercase tracking-wider mb-2">Measurement Unit</label>
+                                <Select value={unit} onValueChange={setUnit}>
+                                    <SelectTrigger className="w-full bg-black border border-cyber-gray text-white rounded-lg h-[46px] focus:ring-cyber-blue focus:ring-1 focus:ring-offset-0">
+                                        <SelectValue placeholder="Select Unit" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-black border border-cyber-gray text-white">
+                                        <SelectItem value="cm" className="focus:bg-cyber-blue focus:text-white cursor-pointer">CM</SelectItem>
+                                        <SelectItem value="inch" className="focus:bg-cyber-blue focus:text-white cursor-pointer">INCH</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div>
@@ -180,6 +204,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ timeStr }) => {
                                 className="flex-1 text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyber-blue file:text-white hover:file:bg-blue-600"
                             />
                         </div>
+                        
 
                         {previewData.length > 0 && (
                             <div className="mb-8">
