@@ -126,7 +126,7 @@ export const getQCReports = async () => {
 };
 
 
-export const uploadGarmentStandards = async (garmentType: string, style: string, standards: any) => {
+export const uploadGarmentStandards = async (garmentType: string, style: string, standards: any, unit: string) => {
   try {
     const { data, error } = await supabase
       .from('garment_standards')
@@ -135,6 +135,7 @@ export const uploadGarmentStandards = async (garmentType: string, style: string,
             style: style,
             garment_type: garmentType, 
             standards: standards,
+            unit: unit,
             updated_at: new Date().toISOString()
         }, 
         { onConflict: 'style' }
@@ -153,7 +154,7 @@ export const getGarmentStyles = async () => {
     try {
         const { data, error } = await supabase
             .from('garment_standards')
-            .select('style, garment_type, standards')
+            .select('style, garment_type, standards, unit')
             .order('updated_at', { ascending: false });
 
         if (error) throw error;

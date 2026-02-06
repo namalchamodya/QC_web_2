@@ -54,7 +54,7 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
     } catch(e) { console.error("Rotate Failed", e); }
   };
 
-  const handleLiveRaw = async (specificGarmentType?: string, standards?: any) => {
+  const handleLiveRaw = async (specificGarmentType?: string, standards?: any, unit: string = 'dist') => {
     setLastResult(null);
     setIsRawMode(true);
     setStatusText("Live Feed (Raw)");
@@ -65,7 +65,23 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
       fd.append('garment_type', specificGarmentType || garmentType);
 
       if (standards) {
-          fd.append('standards', JSON.stringify(standards));
+          const sizes = Object.keys(standards);
+          let keyMeasurements: string[] = [];
+          
+          if (sizes.length > 0) {
+              const firstSize = standards[sizes[0]];
+              if (Array.isArray(firstSize)) {
+                  keyMeasurements = firstSize.map((item: any) => item.description);
+              }
+          }
+
+          const formattedStandards = {
+              unit: unit,
+              key_measurements: keyMeasurements,
+              ...standards
+          };
+
+          fd.append('standards', JSON.stringify(formattedStandards));
       }
 
       await fetch(`${API_BASE}/api/set-mode`, { method: 'POST', body: fd });
@@ -78,8 +94,9 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
       const styleRecord = styles.find(s => s.style === newStyleCode);
       if (styleRecord) {
           const type = styleRecord.garment_type;
+          const unit = styleRecord.unit || 'cm';
           setGarmentType(type);
-          handleLiveRaw(type, styleRecord.standards);
+          handleLiveRaw(type, styleRecord.standards, unit);
       }
   };
 
@@ -159,22 +176,24 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
             <span className="font-mono text-lg">{lastResult ? lastResult.detected_size : '--'}</span>
           </div>
 
-          <div className="flex-1 relative z-50">
+          <div className="flex-1 relative z-50 min-w-0 ">
              <Select value={selectedStyle} onValueChange={handleStyleValueChange}>
-                <SelectTrigger className="w-full h-full bg-cyber-blue hover:bg-blue-600 text-white font-bold border-none shadow-glow-blue data-[placeholder]:text-white text-left px-3">
+                <SelectTrigger className="w-full h-full bg-cyber-dark border border-cyber-gray text-white rounded-lg px-3 py-2 text-left focus:ring-cyber-blue focus:ring-1 focus:ring-offset-0 [&>span]:whitespace-normal [&>span]:line-clamp-2 [&>span]:text-left">
                     <SelectValue placeholder="SELECT STYLE" />
                 </SelectTrigger>
-                <SelectContent className="bg-cyber-dark border-cyber-gray text-white max-h-60 z-50">
+                <SelectContent className="bg-black border border-cyber-gray text-white max-h-60 z-50">
                     <SelectGroup>
                         <SelectLabel className="text-gray-400 text-xs uppercase tracking-wider px-2 py-1.5">Available Styles</SelectLabel>
                         {styles.map(s => (
                             <SelectItem
                                 key={s.style}
                                 value={s.style}
-                                className="focus:bg-cyber-blue/20 hover:bg-cyber-blue/20 cursor-pointer py-2 pl-8 pr-2 text-sm text-white focus:text-white"
+                                className="focus:bg-cyber-blue focus:text-white cursor-pointer py-2 pl-8 pr-2 text-sm"
                             >
-                                <span className="font-mono font-bold mr-2">{s.style}</span>
-                                <span className="text-xs text-white uppercase">({s.garment_type})</span>
+                                <div className="flex flex-col">
+                                    <span className="font-mono font-bold">{s.style}</span>
+                                    <span className="text-[10px] opacity-70 uppercase tracking-wider">({s.garment_type})</span>
+                                </div>
                             </SelectItem>
                         ))}
                     </SelectGroup>
