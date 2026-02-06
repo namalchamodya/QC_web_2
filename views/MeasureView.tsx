@@ -1,9 +1,18 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { API_BASE, GARMENT_TYPES } from '../constants';
+import { API_BASE } from '../constants';
 import { ProcessResult } from '../types';
 import { Icons } from '../components/Icons';
 import { StatusHeader } from '../components/StatusHeader';
-import { saveQCReportToDB } from '../services/qcService';
+import { saveQCReportToDB, getGarmentStyles } from '../services/qcService';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 interface MeasureViewProps {
   ppcm: number;
@@ -14,18 +23,28 @@ interface MeasureViewProps {
   timeStr: string;
 }
 
-export const MeasureView: React.FC<MeasureViewProps> = ({ 
-  ppcm, garmentType, setGarmentType, statusText, setStatusText, timeStr 
+export const MeasureView: React.FC<MeasureViewProps> = ({
+  ppcm, garmentType, setGarmentType, statusText, setStatusText, timeStr
 }) => {
   const [lastResult, setLastResult] = useState<ProcessResult | null>(null);
   const [isRawMode, setIsRawMode] = useState(false);
   const [showQCModal, setShowQCModal] = useState(false);
+  const [styles, setStyles] = useState<any[]>([]);
+  const [selectedStyle, setSelectedStyle] = useState<string>('');
 
   const videoFeedUrl = `${API_BASE}/video_feed`;
 
   useEffect(() => {
     setStatusText("Camera Ready (Stream)");
+    fetchStyles();
   }, []);
+
+  const fetchStyles = async () => {
+      const data = await getGarmentStyles();
+      setStyles(data);
+      if (data.length > 0 && !selectedStyle) {
+      }
+  };
 
   const rotateCamera = async () => {
     try {
@@ -35,7 +54,7 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
     } catch(e) { console.error("Rotate Failed", e); }
   };
 
-  const handleLiveRaw = async (specificGarmentType?: string) => {
+  const handleLiveRaw = async (specificGarmentType?: string, standards?: any) => {
     setLastResult(null);
     setIsRawMode(true);
     setStatusText("Live Feed (Raw)");
@@ -44,14 +63,24 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
       fd.append('mode', 'RAW');
       fd.append('pixels_per_cm', ppcm.toString());
       fd.append('garment_type', specificGarmentType || garmentType);
+
+      if (standards) {
+          fd.append('standards', JSON.stringify(standards));
+      }
+
       await fetch(`${API_BASE}/api/set-mode`, { method: 'POST', body: fd });
     } catch(e) { console.error(e); }
   };
 
-  const toggleGarmentType = () => {
-      const next = garmentType === 'trousers' ? 'short_sleeve_top' : 'trousers';
-      setGarmentType(next);
-      handleLiveRaw(next);
+  const handleStyleValueChange = (newStyleCode: string) => {
+      setSelectedStyle(newStyleCode);
+
+      const styleRecord = styles.find(s => s.style === newStyleCode);
+      if (styleRecord) {
+          const type = styleRecord.garment_type;
+          setGarmentType(type);
+          handleLiveRaw(type, styleRecord.standards);
+      }
   };
 
   const handleCapture = async () => {
@@ -59,10 +88,16 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
     setIsRawMode(false);
     setShowQCModal(false);
     const fd = new FormData();
-    fd.append('use_internal_cam', 'true'); 
+    fd.append('use_internal_cam', 'true');
     fd.append('pixels_per_cm', ppcm.toString());
     fd.append('manual_garment_type', garmentType);
-    fd.append('save_report', 'false'); 
+    fd.append('save_report', 'false');
+
+    const styleRecord = styles.find(s => s.style === selectedStyle);
+    if (styleRecord && styleRecord.standards) {
+        fd.append('standards', JSON.stringify(styleRecord.standards));
+    }
+
     try {
         const res = await fetch(`${API_BASE}/process`, { method: 'POST', body: fd });
         const data = await res.json();
@@ -78,17 +113,17 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
     if (!result) return;
     try {
         setStatusText("Saving to Database...");
-        const saved = await saveQCReportToDB(result, garmentType); // You can pass factoryId as 3rd arg if available
+        const saved = await saveQCReportToDB(result, garmentType);
         setStatusText(`Saved: ${saved.id.slice(0, 8)}...`);
         alert(`Report Saved Successfully!\nID: ${saved.id}`);
-    } catch(e: any) { 
+    } catch(e: any) {
         setStatusText("Save Error: " + e.message);
         console.error(e);
-    } 
+    }
   };
 
   return (
-    <div className="flex h-full w-full gap-4 p-4 pr-0 relative"> 
+    <div className="flex h-full w-full gap-4 p-4 pr-0 relative">
       {showQCModal && lastResult && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowQCModal(false)}>
             <div className="bg-cyber-dark border-2 border-red-500 p-8 rounded-2xl max-w-lg w-full shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -116,20 +151,39 @@ export const MeasureView: React.FC<MeasureViewProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 w-96 shrink-0 z-10 p-4 pl-0 h-full min-h-0">
+      <div className="flex flex-col gap-4 w-96 shrink-0 p-4 pl-0 h-full min-h-0">
         <StatusHeader statusText={statusText} timeStr={timeStr} />
         <div className="flex gap-2 shrink-0">
           <div className="flex-1 bg-cyber-dark border border-cyber-gray text-white font-bold py-3 rounded-lg text-center text-sm uppercase flex flex-col justify-center">
             <span className="text-[10px] text-gray-400">Detected Size</span>
             <span className="font-mono text-lg">{lastResult ? lastResult.detected_size : '--'}</span>
           </div>
-          <button onClick={toggleGarmentType} className="flex-1 bg-cyber-blue hover:bg-blue-600 text-white font-bold py-3 rounded-lg text-center text-sm uppercase transition-colors shadow-glow-blue">
-            <span className="text-[10px] text-blue-200 block">Garment Mode</span>
-            {GARMENT_TYPES.find(g => g.id === garmentType)?.label || garmentType}
-          </button>
+
+          <div className="flex-1 relative z-50">
+             <Select value={selectedStyle} onValueChange={handleStyleValueChange}>
+                <SelectTrigger className="w-full h-full bg-cyber-blue hover:bg-blue-600 text-white font-bold border-none shadow-glow-blue data-[placeholder]:text-white text-left px-3">
+                    <SelectValue placeholder="SELECT STYLE" />
+                </SelectTrigger>
+                <SelectContent className="bg-cyber-dark border-cyber-gray text-white max-h-60 z-50">
+                    <SelectGroup>
+                        <SelectLabel className="text-gray-400 text-xs uppercase tracking-wider px-2 py-1.5">Available Styles</SelectLabel>
+                        {styles.map(s => (
+                            <SelectItem
+                                key={s.style}
+                                value={s.style}
+                                className="focus:bg-cyber-blue/20 hover:bg-cyber-blue/20 cursor-pointer py-2 pl-8 pr-2 text-sm text-white focus:text-white"
+                            >
+                                <span className="font-mono font-bold mr-2">{s.style}</span>
+                                <span className="text-xs text-white uppercase">({s.garment_type})</span>
+                            </SelectItem>
+                        ))}
+                    </SelectGroup>
+                </SelectContent>
+             </Select>
+          </div>
         </div>
 
-        <div className="flex-1 bg-cyber-dark rounded-3xl p-6 flex flex-col items-center justify-center text-center overflow-y-auto shadow-inner border border-cyber-gray relative min-h-0">
+        <div className="flex-1 bg-cyber-dark rounded-3xl p-6 flex flex-col items-center justify-center text-center overflow-y-auto shadow-inner border border-cyber-gray relative min-h-0 z-10">
           <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#0066FF 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
           {lastResult ? (
             <div className="w-full h-full flex flex-col gap-2 relative z-10">
