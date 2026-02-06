@@ -9,15 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.978.0",
-    "@supabase/supabase-js": "^2.93.2",
-    "@types/papaparse": "^5.5.2",
+    "@aws-sdk/client-s3": "^3.981.0",
+    "@supabase/supabase-js": "^2.93.3",
     "papaparse": "^5.5.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.10",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",

@@ -20,13 +20,54 @@ export const MenuGridView: React.FC<MenuGridViewProps> = ({ currentView, setCurr
              <StatusHeader statusText="Menu" timeStr={timeStr} />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
-            <MenuTile icon={<Icons.Home />} label="Measure" active={currentView === ViewState.MEASURE} onClick={() => setCurrentView(ViewState.MEASURE)} />
-            <MenuTile icon={<Icons.Ethernet />} label="Ethernet" onClick={() => {}} />
-            <MenuTile icon={<Icons.Wifi />} label="Wi-Fi Setup" onClick={() => {}} />
-            <MenuTile icon={<Icons.Calibration />} label="Calibration" active={currentView === ViewState.CALIBRATE} onClick={() => setCurrentView(ViewState.CALIBRATE)} />
-            <MenuTile icon={<Icons.Reports />} label="QC Reports" active={currentView === ViewState.REPORTS} onClick={() => setCurrentView(ViewState.REPORTS)} />
-            <MenuTile icon={<Icons.Settings />} label="System Settings" active={currentView === ViewState.SETTINGS} onClick={() => setCurrentView(ViewState.SETTINGS)} />
-            <MenuTile icon={<Icons.Garment />} label="Reference Garments" active={currentView === ViewState.REFERENCE} onClick={() => setCurrentView(ViewState.REFERENCE)} />
+            <MenuTile 
+                icon={<Icons.Home />} 
+                label="Measure" 
+                active={currentView === ViewState.MEASURE} 
+                onClick={() => setCurrentView(ViewState.MEASURE)} 
+            />
+            
+            <MenuTile 
+                icon={<Icons.Ethernet />} 
+                label="Ethernet" 
+                onClick={() => {}} 
+            />
+            
+            {/* UPDATED: This now switches to the WIFI view */}
+            <MenuTile 
+                icon={<Icons.Wifi />} 
+                label="Wi-Fi Setup" 
+                active={currentView === ViewState.WIFI} 
+                onClick={() => setCurrentView(ViewState.WIFI)} 
+            />
+
+            <MenuTile 
+                icon={<Icons.Calibration />} 
+                label="Calibration" 
+                active={currentView === ViewState.CALIBRATE} 
+                onClick={() => setCurrentView(ViewState.CALIBRATE)} 
+            />
+            
+            <MenuTile 
+                icon={<Icons.Reports />} 
+                label="QC Reports" 
+                active={currentView === ViewState.REPORTS} 
+                onClick={() => setCurrentView(ViewState.REPORTS)} 
+            />
+            
+            <MenuTile 
+                icon={<Icons.Settings />} 
+                label="System Settings" 
+                active={currentView === ViewState.SETTINGS} 
+                onClick={() => setCurrentView(ViewState.SETTINGS)} 
+            />
+            
+            <MenuTile 
+                icon={<Icons.Garment />} 
+                label="Reference Garments" 
+                active={currentView === ViewState.REFERENCE} 
+                onClick={() => setCurrentView(ViewState.REFERENCE)} 
+            />
         </div>
      </div>
   );

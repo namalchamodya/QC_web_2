@@ -48,6 +48,7 @@ export enum ViewState {
   REFERENCE = 'REFERENCE',
   REPORTS = 'REPORTS',
   SETTINGS = 'SETTINGS',
+  WIFI = 'WIFI',
 }
 
 export enum CameraRotation {

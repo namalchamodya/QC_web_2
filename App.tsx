@@ -4,7 +4,6 @@ import { ViewState } from './types';
 
 // Modules
 import { Sidebar } from './components/Sidebar';
-import { StatusHeader } from './components/StatusHeader';
 
 // Views
 import { MeasureView } from './views/MeasureView';
@@ -13,6 +12,7 @@ import { ReportsView } from './views/ReportsView';
 import { MenuGridView } from './views/MenuGridView';
 import { ReferenceView } from './views/ReferenceView';
 import { SettingsView } from './views/SettingsView';
+import { WifiView } from './views/WifiView'; // <--- NEW IMPORT
 
 export default function App() {
   // Global State
@@ -97,6 +97,13 @@ export default function App() {
 
             {currentView === ViewState.SETTINGS && (
                <SettingsView timeStr={timeStr} />
+            )}
+
+            {currentView === ViewState.WIFI && (
+               <WifiView 
+                 timeStr={timeStr} 
+                 onBack={() => setCurrentView(ViewState.MENU)} 
+               />
             )}
         </div>
     </div>
